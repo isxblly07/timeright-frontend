@@ -1,9 +1,10 @@
 import { useState } from 'react'
+import axios from 'axios'
 import './Auth.css'
 
-// Componente principal de autenticação que alterna entre login e cadastro
+// Componente de autenticação administrativa
 function Auth({ onBackClick }) {
-  // Estado para controlar se está mostrando login (true) ou cadastro (false)
+  // Estado para alternar entre login e cadastro de admin
   const [isLogin, setIsLogin] = useState(true)
   
   // Estados para os campos do formulário
@@ -22,73 +23,76 @@ function Auth({ onBackClick }) {
     })
   }
 
-  // Função para processar o envio do formulário
+  // Função para processar login/cadastro administrativo
   const handleSubmit = async (e) => {
     e.preventDefault()
     
     if (isLogin) {
-      // Verifica se é acesso de administrador
+      // LOGIN - Verifica admin padrão ou cadastrados
       if (formData.email === 'admin@timeright.com' && formData.password === 'admin123') {
-        alert('Acesso de administrador autorizado!')
-        onBackClick('admin') // Navega para painel admin
+        alert('Acesso autorizado! Admin padrão.')
+        onBackClick('admin', { nome: 'Administrador', email: 'admin@timeright.com' })
         return
       }
       
-      // Login normal - busca usuário no backend
-      try {
-        const response = await fetch('http://localhost:8080/api/usuario')
-        const usuarios = await response.json()
-        
-        const usuario = usuarios.find(u => 
-          u.email === formData.email && u.senha === formData.password
-        )
-        
-        if (usuario) {
-          alert(`Bem-vindo, ${usuario.nome}!`)
-          onBackClick('home')
-        } else {
-          alert('Email ou senha incorretos!')
-        }
-      } catch (error) {
-        alert('Erro ao conectar com o servidor!')
+      // Verifica admins cadastrados no localStorage
+      const admins = JSON.parse(localStorage.getItem('admins') || '[]')
+      const admin = admins.find(a => 
+        a.email === formData.email && a.senha === formData.password
+      )
+      
+      if (admin) {
+        alert(`Bem-vindo, ${admin.nome}!`)
+        onBackClick('admin', admin)
+      } else {
+        alert('Credenciais inválidas!')
       }
     } else {
-      // Validação para cadastro
+      // CADASTRO - Validação e registro
       if (formData.password !== formData.confirmPassword) {
         alert('As senhas não coincidem!')
         return
       }
       
-      // Cadastro - envia para o backend
-      try {
-        const response = await fetch('http://localhost:8080/api/usuario', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            nome: formData.name,
-            email: formData.email,
-            senha: formData.password
-          })
-        })
-        
-        if (response.ok) {
-          alert('Cadastro realizado com sucesso!')
-          setIsLogin(true) // Muda para tela de login
-        } else {
-          alert('Erro ao realizar cadastro!')
-        }
-      } catch (error) {
-        alert('Erro ao conectar com o servidor!')
+      if (!formData.name.trim()) {
+        alert('Nome é obrigatório!')
+        return
       }
+      
+      // Verifica se email já existe
+      const admins = JSON.parse(localStorage.getItem('admins') || '[]')
+      if (admins.find(a => a.email === formData.email)) {
+        alert('Email já cadastrado!')
+        return
+      }
+      
+      // Cadastra novo admin
+      const novoAdmin = {
+        id: Date.now(),
+        nome: formData.name,
+        email: formData.email,
+        senha: formData.password
+      }
+      
+      admins.push(novoAdmin)
+      localStorage.setItem('admins', JSON.stringify(admins))
+      
+      alert('Administrador cadastrado com sucesso!')
+      setIsLogin(true)
+      
+      // Limpa formulário
+      setFormData({
+        email: '',
+        password: '',
+        confirmPassword: '',
+        name: ''
+      })
     }
   }
 
   // Função para alternar entre login e cadastro
   const toggleMode = () => {
     setIsLogin(!isLogin)
-    // Limpa os campos ao trocar de modo
     setFormData({
       email: '',
       password: '',
@@ -96,6 +100,8 @@ function Auth({ onBackClick }) {
       name: ''
     })
   }
+
+
 
   return (
     <div className="auth-container">
@@ -105,18 +111,18 @@ function Auth({ onBackClick }) {
       </button>
       
       <div className="auth-card">
-        {/* Título dinâmico baseado no modo atual */}
+        {/* Título dinâmico */}
         <h2 className="auth-title">
-          {isLogin ? 'Entrar' : 'Criar Conta'}
+          {isLogin ? 'Login Administrativo' : 'Cadastro Administrativo'}
         </h2>
         
-        {/* Formulário de autenticação */}
+        {/* Formulário de autenticação administrativa */}
         <form onSubmit={handleSubmit} className="auth-form">
           
-          {/* Campo nome - só aparece no cadastro */}
+          {/* Campo nome - só no cadastro */}
           {!isLogin && (
             <div className="form-group">
-              <label htmlFor="name">Nome Completo</label>
+              <label htmlFor="name">Nome do Administrador</label>
               <input
                 type="text"
                 id="name"
@@ -124,14 +130,14 @@ function Auth({ onBackClick }) {
                 value={formData.name}
                 onChange={handleInputChange}
                 required
-                placeholder="Digite seu nome completo"
+                placeholder="Digite o nome completo"
               />
             </div>
           )}
           
-          {/* Campo email - aparece sempre */}
+          {/* Campo email */}
           <div className="form-group">
-            <label htmlFor="email">Email</label>
+            <label htmlFor="email">Email Administrativo</label>
             <input
               type="email"
               id="email"
@@ -139,11 +145,11 @@ function Auth({ onBackClick }) {
               value={formData.email}
               onChange={handleInputChange}
               required
-              placeholder="Digite seu email"
+              placeholder="Digite o email administrativo"
             />
           </div>
           
-          {/* Campo senha - aparece sempre */}
+          {/* Campo senha */}
           <div className="form-group">
             <label htmlFor="password">Senha</label>
             <input
@@ -153,12 +159,12 @@ function Auth({ onBackClick }) {
               value={formData.password}
               onChange={handleInputChange}
               required
-              placeholder="Digite sua senha"
+              placeholder="Digite a senha"
               minLength="6"
             />
           </div>
           
-          {/* Campo confirmar senha - só aparece no cadastro */}
+          {/* Campo confirmar senha - só no cadastro */}
           {!isLogin && (
             <div className="form-group">
               <label htmlFor="confirmPassword">Confirmar Senha</label>
@@ -169,37 +175,37 @@ function Auth({ onBackClick }) {
                 value={formData.confirmPassword}
                 onChange={handleInputChange}
                 required
-                placeholder="Confirme sua senha"
+                placeholder="Confirme a senha"
                 minLength="6"
               />
             </div>
           )}
           
-          {/* Botão de envio com texto dinâmico */}
+          {/* Botão dinâmico */}
           <button type="submit" className="auth-button">
-            {isLogin ? 'Entrar' : 'Cadastrar'}
+            {isLogin ? 'Acessar Painel' : 'Cadastrar Admin'}
           </button>
         </form>
         
-        {/* Informações sobre acesso de administrador */}
+        {/* Informações sobre acesso padrão */}
         {isLogin && (
           <div className="admin-info">
             <small>
-              🔑 Administrador: admin@timeright.com / admin123
+              🔑 Admin padrão: admin@timeright.com / admin123
             </small>
           </div>
         )}
         
-        {/* Link para alternar entre login e cadastro */}
+        {/* Alternância entre login e cadastro */}
         <div className="auth-toggle">
           <p>
-            {isLogin ? 'Não tem uma conta?' : 'Já tem uma conta?'}
+            {isLogin ? 'Não tem conta administrativa?' : 'Já tem conta administrativa?'}
             <button 
               type="button" 
               onClick={toggleMode} 
               className="toggle-button"
             >
-              {isLogin ? 'Cadastre-se' : 'Faça login'}
+              {isLogin ? 'Cadastrar Admin' : 'Fazer Login'}
             </button>
           </p>
         </div>
