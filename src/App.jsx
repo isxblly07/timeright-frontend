@@ -1,37 +1,50 @@
-import Navbar from './components/Navbar'
-import Footer from './components/Footer'
-import Carousel from './components/Carousel'
+import { useState } from 'react'
+import Auth from './components/Auth'
+import Admin from './components/Admin'
 import './App.css'
 
+// Componente principal da aplicação
 function App() {
+  // Estado para controlar qual página está sendo exibida
+  // 'home' = página inicial, 'auth' = página de login/cadastro
+  const [currentPage, setCurrentPage] = useState('home')
+  
+  // Estado para controlar se o usuário está logado
+  const [isLoggedIn, setIsLoggedIn] = useState(false)
+
+  // Função para navegar entre páginas
+  const navigateTo = (page) => {
+    setCurrentPage(page)
+  }
+
+  // Função para fazer logout
+  const handleLogout = () => {
+    setIsLoggedIn(false)
+    setCurrentPage('home')
+  }
+
+  // Renderização condicional baseada na página atual
+  if (currentPage === 'auth') {
+    return <Auth onBackClick={(page = 'home') => navigateTo(page)} />
+  }
+  
+  if (currentPage === 'admin') {
+    return <Admin onBackClick={() => navigateTo('home')} />
+  }
+
+  // Página inicial (home)
   return (
     <div className="App">
-      <Navbar />
-      <main className="main-content">
-        <div className="content">
-          <Carousel />
-          <h2>Bem-vindo ao TimeRight</h2>
-          <p>
-            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. 
-            Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. 
-            Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. 
-            Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
-          </p>
-          <p>
-            Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, 
-            totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo. 
-            Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit, sed quia consequuntur magni dolores eos 
-            qui ratione voluptatem sequi nesciunt.
-          </p>
-          <p>
-            Neque porro quisquam est, qui dolorem ipsum quia dolor sit amet, consectetur, adipisci velit, 
-            sed quia non numquam eius modi tempora incidunt ut labore et dolore magnam aliquam quaerat voluptatem. 
-            Ut enim ad minima veniam, quis nostrum exercitationem ullam corporis suscipit laboriosam, 
-            nisi ut aliquid ex ea commodi consequatur?
-          </p>
-        </div>
+      {/* Home page minimalista com fundo rosa pastel */}
+      <main className="home-container">
+        <h1 className="home-title">TimeRight</h1>
+        <button 
+          className="home-button"
+          onClick={() => navigateTo('auth')}
+        >
+          Começar Agora
+        </button>
       </main>
-      <Footer />
     </div>
   )
 }

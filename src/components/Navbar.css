@@ -39,3 +39,41 @@
 .nav-btn:hover {
   background-color: #FFF7F1;
 }
+
+/* Botão de logout com estilo diferenciado */
+.logout-btn {
+  background-color: #ff6b6b !important;
+  color: white !important;
+}
+
+.logout-btn:hover {
+  background-color: #ff5252 !important;
+}
+
+/* Mensagem de boas-vindas */
+.user-welcome {
+  color: #333;
+  font-weight: 500;
+  font-size: 0.9rem;
+}
+
+/* Responsividade para telas menores */
+@media (max-width: 768px) {
+  .navbar {
+    padding: 1rem;
+  }
+  
+  .logo {
+    font-size: 1.5rem;
+  }
+  
+  .nav-btn {
+    padding: 0.4rem 0.8rem;
+    font-size: 0.9rem;
+    margin-right: 0.5rem;
+  }
+  
+  .user-welcome {
+    font-size: 0.8rem;
+  }
+}
