@@ -1,4 +1,6 @@
 import { useState } from 'react'
+import axios from 'axios'
+import { API_BASE_URL } from '../config/database'
 import './Admin.css'
 
 function Profile({ adminData, onBackClick }) {
@@ -16,21 +18,25 @@ function Profile({ adminData, onBackClick }) {
     })
   }
 
-  const handleSave = () => {
-    // Atualiza dados no localStorage se não for admin padrão
-    if (adminData?.id) {
-      const admins = JSON.parse(localStorage.getItem('admins') || '[]')
-      const updatedAdmins = admins.map(admin => 
-        admin.id === adminData.id 
-          ? { ...admin, nome: formData.nome, email: formData.email, senha: formData.senha || admin.senha }
-          : admin
-      )
-      localStorage.setItem('admins', JSON.stringify(updatedAdmins))
+  const handleSave = async () => {
+    try {
+      const updateData = {
+        nome: formData.nome,
+        email: formData.email
+      }
+      
+      if (formData.senha) {
+        updateData.senha = formData.senha
+      }
+      
+      const response = await axios.put(`${API_BASE_URL}/admin/${adminData.id}`, updateData)
+      
+      alert('Dados atualizados com sucesso!')
+      setIsEditing(false)
+      onBackClick('admin', response.data)
+    } catch (error) {
+      alert('Erro ao atualizar dados!')
     }
-    
-    alert('Dados atualizados com sucesso!')
-    setIsEditing(false)
-    onBackClick('admin', { ...adminData, nome: formData.nome, email: formData.email })
   }
 
   return (

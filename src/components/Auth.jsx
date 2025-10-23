@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import axios from 'axios'
+import { API_BASE_URL } from '../config/database'
 import './Auth.css'
 
 // Componente de autenticação administrativa
@@ -28,24 +29,23 @@ function Auth({ onBackClick }) {
     e.preventDefault()
     
     if (isLogin) {
-      // LOGIN - Verifica admin padrão ou cadastrados
-      if (formData.email === 'admin@timeright.com' && formData.password === 'admin123') {
-        alert('Acesso autorizado! Admin padrão.')
-        onBackClick('admin', { nome: 'Administrador', email: 'admin@timeright.com' })
-        return
-      }
-      
-      // Verifica admins cadastrados no localStorage
-      const admins = JSON.parse(localStorage.getItem('admins') || '[]')
-      const admin = admins.find(a => 
-        a.email === formData.email && a.senha === formData.password
-      )
-      
-      if (admin) {
-        alert(`Bem-vindo, ${admin.nome}!`)
-        onBackClick('admin', admin)
-      } else {
-        alert('Credenciais inválidas!')
+      // LOGIN - Verifica credenciais no banco
+      try {
+        const response = await axios.post(`${API_BASE_URL}/admin/login`, {
+          email: formData.email,
+          senha: formData.password
+        })
+        
+        if (response.data) {
+          alert(`Bem-vindo, ${response.data.nome}!`)
+          onBackClick('admin', response.data)
+        }
+      } catch (error) {
+        if (error.response?.status === 401) {
+          alert('Credenciais inválidas!')
+        } else {
+          alert('Erro ao conectar com servidor!')
+        }
       }
     } else {
       // CADASTRO - Validação e registro
@@ -59,34 +59,30 @@ function Auth({ onBackClick }) {
         return
       }
       
-      // Verifica se email já existe
-      const admins = JSON.parse(localStorage.getItem('admins') || '[]')
-      if (admins.find(a => a.email === formData.email)) {
-        alert('Email já cadastrado!')
-        return
+      try {
+        await axios.post(`${API_BASE_URL}/admin/cadastro`, {
+          nome: formData.name,
+          email: formData.email,
+          senha: formData.password
+        })
+        
+        alert('Administrador cadastrado com sucesso!')
+        setIsLogin(true)
+        
+        // Limpa formulário
+        setFormData({
+          email: '',
+          password: '',
+          confirmPassword: '',
+          name: ''
+        })
+      } catch (error) {
+        if (error.response?.status === 409) {
+          alert('Email já cadastrado!')
+        } else {
+          alert('Erro ao cadastrar administrador!')
+        }
       }
-      
-      // Cadastra novo admin
-      const novoAdmin = {
-        id: Date.now(),
-        nome: formData.name,
-        email: formData.email,
-        senha: formData.password
-      }
-      
-      admins.push(novoAdmin)
-      localStorage.setItem('admins', JSON.stringify(admins))
-      
-      alert('Administrador cadastrado com sucesso!')
-      setIsLogin(true)
-      
-      // Limpa formulário
-      setFormData({
-        email: '',
-        password: '',
-        confirmPassword: '',
-        name: ''
-      })
     }
   }
 
