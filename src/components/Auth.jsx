@@ -60,13 +60,13 @@ function Auth({ onBackClick }) {
       }
       
       try {
-        await axios.post(`${API_BASE_URL}/admin/cadastro`, {
+        const response = await axios.post(`${API_BASE_URL}/admin/cadastro`, {
           nome: formData.name,
           email: formData.email,
           senha: formData.password
         })
         
-        alert('Administrador cadastrado com sucesso!')
+        alert('Usuário cadastrado com sucesso!')
         setIsLogin(true)
         
         // Limpa formulário
@@ -77,10 +77,15 @@ function Auth({ onBackClick }) {
           name: ''
         })
       } catch (error) {
-        if (error.response?.status === 409) {
+        console.error('Erro no cadastro:', error)
+        if (error.code === 'ERR_NETWORK') {
+          alert('Servidor não está rodando! Inicie o backend na porta 8080.')
+        } else if (error.response?.status === 409) {
           alert('Email já cadastrado!')
+        } else if (error.response?.status === 500) {
+          alert('Erro interno do servidor!')
         } else {
-          alert('Erro ao cadastrar administrador!')
+          alert(`Erro ao cadastrar: ${error.response?.data?.message || error.message}`)
         }
       }
     }

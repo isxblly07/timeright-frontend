@@ -6,8 +6,8 @@ import './Admin.css'
 function Profile({ adminData, onBackClick }) {
   const [isEditing, setIsEditing] = useState(false)
   const [formData, setFormData] = useState({
-    nome: adminData?.nome || 'Administrador',
-    email: adminData?.email || 'admin@timeright.com',
+    nome: adminData?.nome || '',
+    email: adminData?.email || '',
     senha: ''
   })
 
@@ -29,7 +29,7 @@ function Profile({ adminData, onBackClick }) {
         updateData.senha = formData.senha
       }
       
-      const response = await axios.put(`${API_BASE_URL}/admin/${adminData.id}`, updateData)
+      const response = await axios.put(`${API_BASE_URL}/usuario/${adminData.id}`, updateData)
       
       alert('Dados atualizados com sucesso!')
       setIsEditing(false)

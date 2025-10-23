@@ -12,4 +12,4 @@ export const dbConfig = {
 }
 
 // Base URL da API
-export const API_BASE_URL = 'https://didactic-space-fiesta-7vpvwxv9qj652wp-3001.app.github.dev/api'
+export const API_BASE_URL = 'http://localhost:8080/api'
